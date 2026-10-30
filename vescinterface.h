@@ -70,6 +70,10 @@ class VescInterface : public QObject
 public:
     explicit VescInterface(QObject *parent = nullptr);
     ~VescInterface();
+
+    QString defaultLeftMotorPort() { return "ttyACM0"; }
+    QString defaultRightMotorPort() { return "ttyACM1"; }
+
     Q_INVOKABLE Commands *commands() const;
     Q_INVOKABLE ConfigParams *mcConfig();
     Q_INVOKABLE ConfigParams *appConfig();

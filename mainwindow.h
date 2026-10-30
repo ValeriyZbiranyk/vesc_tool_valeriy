@@ -26,6 +26,7 @@
 #include <QProcess>
 #include <QSettings>
 #include <QMap>
+#include <QGamepad>
 #include "pollmanager.h"
 #include "vescinterface.h"
 #include "widgets/pagelistitem.h"
@@ -100,6 +101,8 @@ private slots:
     void paramChangedDouble(QObject *src, QString name, double newParam);
     void mcConfigCheckResult(QStringList paramsNotSet);
     void pingCanRx(QVector<int> devs, bool isTimeout);
+    void updateControlValues();
+    void gamepadBtnPressed(bool value);
 
     void on_actionReconnect_triggered();
     void on_actionDisconnect_triggered();
@@ -170,6 +173,17 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
+
+    enum Gear {
+        Top,
+        Middle,
+        Low
+    };
+
+    QGamepad* mGamepad;
+    Gear currentGear = Gear::Low;
+    bool isReversed = false;
+    QTimer* mUpdateControlValuesTimer;
 
     QSettings mSettings;
     QString mVersion;
@@ -247,6 +261,8 @@ private:
     void showPage(const QString &name);
     void reloadPages();
     void checkUdev();
+    void calculateDuty(double &leftMotorDuty, double &rightMotorDuty);
+
 #ifdef Q_OS_LINUX
     bool waitProcess(QProcess &process, bool block = true, int timeoutMs = 300000);
     QString runCmd(QString cmd, QStringList args);

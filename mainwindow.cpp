@@ -29,6 +29,7 @@
 #include <QEventLoop>
 #include <QDesktopServices>
 #include <QProgressDialog>
+#include <QGamepadManager>
 #include "parametereditor.h"
 #include "startupwizard.h"
 #include "widgets/experimentplot.h"
@@ -568,6 +569,17 @@ MainWindow::MainWindow(QWidget *parent) :
     mPageDebugPrint->printConsole("VESC® Tool " + mVersion + " started<br>");
 
     setAcceptDrops(true);
+
+    mGamepad = new QGamepad();
+    mGamepad->setParent(this);
+    connect(mGamepad, &QGamepad::buttonAChanged, this, &MainWindow::gamepadBtnPressed);
+    connect(mGamepad, &QGamepad::buttonXChanged, this, &MainWindow::gamepadBtnPressed);
+    connect(mGamepad, &QGamepad::buttonYChanged, this, &MainWindow::gamepadBtnPressed);
+    connect(mGamepad, &QGamepad::buttonBChanged, this, &MainWindow::gamepadBtnPressed);
+
+    mUpdateControlValuesTimer = new QTimer(this);
+    connect(mUpdateControlValuesTimer, &QTimer::timeout, this, &MainWindow::updateControlValues);
+    mUpdateControlValuesTimer->start(100);
 }
 
 MainWindow::~MainWindow()
@@ -1843,6 +1855,49 @@ void MainWindow::checkUdev()
     }
 #endif
 }
+
+void MainWindow::calculateDuty(double &leftMotorDuty, double &rightMotorDuty)
+{
+    if(!mGamepad) {
+        return;
+    }
+
+    if(!mGamepad->isConnected()) {
+        if(!QGamepadManager::instance()->connectedGamepads().isEmpty()) {
+            mGamepad->setDeviceId(QGamepadManager::instance()->connectedGamepads().first());
+        } else {
+            return;
+        }
+    }
+
+    double dutyRange = 0;
+
+    switch(currentGear) {
+    case Gear::Low:
+        dutyRange = 0.2;
+        break;
+    case Gear::Middle:
+        dutyRange = 0.5;
+        break;
+    case Gear::Top:
+        dutyRange = 0.9;
+        break;
+    default:
+        break;
+    }
+
+    double motorDirectionModifier = isReversed ? 1: -1;
+
+    if(mGamepad->axisLeftY() > 0.1 ||
+        mGamepad->axisLeftY() < -0.1) {
+        leftMotorDuty = mGamepad->axisLeftY() * dutyRange * motorDirectionModifier;
+    }
+    if(mGamepad->axisRightY() > 0.1 ||
+        mGamepad->axisRightY() < -0.1) {
+        rightMotorDuty = mGamepad->axisLeftY() * dutyRange * motorDirectionModifier;
+    }
+}
+
 #ifdef Q_OS_LINUX
 bool MainWindow::waitProcess(QProcess &process, bool block, int timeoutMs)
 {
@@ -2181,6 +2236,47 @@ void MainWindow::pingCanRx(QVector<int> devs, bool isTimeout)
     ui->canList->setEnabled(true);
     ui->actionCanFwd->setEnabled(ui->canList->isEnabled());
     ui->scanCanButton->setEnabled(true);
+}
+
+void MainWindow::updateControlValues()
+{
+    if(!mVesc) {
+        return;
+    }
+
+    if(!mVesc->isPortConnected()) {
+        mVesc->connectSerial(mVesc->defaultLeftMotorPort(), 115200);
+        return;
+    }
+
+    double leftDutyValue = 0;
+    double rightDutyValue = 0;
+
+    calculateDuty(leftDutyValue, rightDutyValue);
+
+    mVesc->commands()->setDutyCycle(leftDutyValue);
+}
+
+void MainWindow::gamepadBtnPressed(bool value)
+{
+    Q_UNUSED(value);
+
+    if(!mGamepad->isConnected()) {
+        return;
+    }
+
+    if(mGamepad->buttonA()) {
+        currentGear = Gear::Low;
+    }
+    if(mGamepad->buttonX()) {
+        currentGear = Gear::Middle;
+    }
+    if(mGamepad->buttonY()) {
+        currentGear = Gear::Top;
+    }
+    if(mGamepad->buttonB()) {
+        isReversed = !isReversed;
+    }
 }
 
 void MainWindow::on_canList_currentRowChanged(int currentRow)
