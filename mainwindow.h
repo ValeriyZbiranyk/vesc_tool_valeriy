@@ -103,6 +103,7 @@ private slots:
     void pingCanRx(QVector<int> devs, bool isTimeout);
     void updateControlValues();
     void gamepadBtnPressed(bool value);
+    void vescHealthCheck();
 
     void on_actionReconnect_triggered();
     void on_actionDisconnect_triggered();
@@ -184,6 +185,7 @@ private:
     Gear currentGear = Gear::Low;
     bool isReversed = false;
     QTimer* mUpdateControlValuesTimer;
+    QTimer* mAutoconnectTimer;
 
     QSettings mSettings;
     QString mVersion;

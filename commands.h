@@ -94,7 +94,7 @@ public:
 signals:
     void sampleDataQmlStarted(int sample_len);
 
-    void dataToSend(QByteArray &data);
+    void dataToSend(QByteArray &data, const QString &motorSerialPort);
 
     void fwVersionReceived(FW_RX_PARAMS params);
     void eraseNewAppResReceived(bool ok);
@@ -186,7 +186,7 @@ public slots:
     void getValues();
     void sendTerminalCmd(QString cmd);
     void sendTerminalCmdSync(QString cmd);
-    void setDutyCycle(double dutyCycle);
+    void setDutyCycle(double dutyCycle, const QString &motorSerialPort);
     void setCurrent(double current);
     void setCurrentBrake(double current);
     void setRpm(int rpm);
@@ -305,7 +305,7 @@ private slots:
     void timerSlot();
 
 private:
-    void emitData(QByteArray data);
+    void emitData(QByteArray data, const QString &motorSerialPort);
 
     QTimer *mTimer;
     bool mSendCan;

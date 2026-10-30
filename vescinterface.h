@@ -71,8 +71,8 @@ public:
     explicit VescInterface(QObject *parent = nullptr);
     ~VescInterface();
 
-    QString defaultLeftMotorPort() { return "ttyACM0"; }
-    QString defaultRightMotorPort() { return "ttyACM1"; }
+    const QString defaultLeftMotorPort = "ttyACM0";
+    const QString defaultRightMotorPort = "ttyACM1";
 
     Q_INVOKABLE Commands *commands() const;
     Q_INVOKABLE ConfigParams *mcConfig();
@@ -341,9 +341,9 @@ private slots:
 #endif
 
     void timerSlot();
-    void packetDataToSend(QByteArray &data);
+    void packetDataToSend(QByteArray &data, const QString &motorSerialPort);
     void packetReceived(QByteArray &data);
-    void cmdDataToSend(QByteArray &data);
+    void cmdDataToSend(QByteArray &data, const QString &motorSerialPort);
     void fwVersionReceived(FW_RX_PARAMS params);
     void appconfUpdated();
     void mcconfUpdated();
@@ -414,7 +414,8 @@ private:
     conn_t mLastConnType;
 
 #ifdef HAS_SERIALPORT
-    QSerialPort *mSerialPort;
+    QSerialPort *mSerialPortLeftMotor;
+    QSerialPort *mSerialPortRightMotor;
     QString mLastSerialPort;
     int mLastSerialBaud;
 #endif

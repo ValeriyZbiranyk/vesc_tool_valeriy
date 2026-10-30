@@ -411,7 +411,7 @@ void VirtualVesc::processPacket(QByteArray &data)
 
 void VirtualVesc::sendReply(const VByteArray &vb)
 {
-    mPacket->sendPacket(vb);
+    mPacket->sendPacket(vb, "");
 }
 
 void VirtualVesc::loadMainConfigs()

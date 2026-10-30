@@ -279,7 +279,7 @@ void Preferences::timerSlot()
             unit = "";
 
             if (mVesc && mUseGamepadControl) {
-                mVesc->commands()->setDutyCycle(input);
+                mVesc->commands()->setDutyCycle(input, mVesc->defaultLeftMotorPort);
             }
         } else if (ctrlt == 3) {
             range = input >= 0 ? fabs(ui->jsErpmMaxBox->value()) : fabs(ui->jsErpmMinBox->value());

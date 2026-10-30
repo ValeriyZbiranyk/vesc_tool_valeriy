@@ -580,6 +580,11 @@ MainWindow::MainWindow(QWidget *parent) :
     mUpdateControlValuesTimer = new QTimer(this);
     connect(mUpdateControlValuesTimer, &QTimer::timeout, this, &MainWindow::updateControlValues);
     mUpdateControlValuesTimer->start(100);
+
+    connect(mVesc, &VescInterface::portConnectedChanged, this, &MainWindow::vescHealthCheck);
+
+    mAutoconnectTimer = new QTimer(this);
+    mAutoconnectTimer->singleShot(2000, this, &MainWindow::vescHealthCheck);
 }
 
 MainWindow::~MainWindow()
@@ -956,7 +961,7 @@ void MainWindow::timerSlot()
 
     if (keyPower != lastKeyPower) {
         lastKeyPower = keyPower;
-        mVesc->commands()->setDutyCycle(keyPower);
+        mVesc->commands()->setDutyCycle(keyPower, mVesc->defaultLeftMotorPort);
         ui->actionSendAlive->setChecked(true);
     }
 
@@ -1144,7 +1149,7 @@ void MainWindow::on_stopButton_clicked()
 
 void MainWindow::on_fullBrakeButton_clicked()
 {
-    mVesc->commands()->setDutyCycle(0);
+    mVesc->commands()->setDutyCycle(0, mVesc->defaultLeftMotorPort);
     ui->actionSendAlive->setChecked(true);
 }
 
@@ -1325,7 +1330,7 @@ void MainWindow::on_actionLibrariesUsed_triggered()
 
 void MainWindow::on_dutyButton_clicked()
 {
-    mVesc->commands()->setDutyCycle(ui->dutyBox->value());
+    mVesc->commands()->setDutyCycle(ui->dutyBox->value(), mVesc->defaultLeftMotorPort);
     ui->actionSendAlive->setChecked(true);
 }
 
@@ -1874,7 +1879,7 @@ void MainWindow::calculateDuty(double &leftMotorDuty, double &rightMotorDuty)
 
     switch(currentGear) {
     case Gear::Low:
-        dutyRange = 0.2;
+        dutyRange = 0.3;
         break;
     case Gear::Middle:
         dutyRange = 0.5;
@@ -1892,9 +1897,10 @@ void MainWindow::calculateDuty(double &leftMotorDuty, double &rightMotorDuty)
         mGamepad->axisLeftY() < -0.1) {
         leftMotorDuty = mGamepad->axisLeftY() * dutyRange * motorDirectionModifier;
     }
+
     if(mGamepad->axisRightY() > 0.1 ||
         mGamepad->axisRightY() < -0.1) {
-        rightMotorDuty = mGamepad->axisLeftY() * dutyRange * motorDirectionModifier;
+        rightMotorDuty = mGamepad->axisRightY() * dutyRange * motorDirectionModifier;
     }
 }
 
@@ -2245,7 +2251,6 @@ void MainWindow::updateControlValues()
     }
 
     if(!mVesc->isPortConnected()) {
-        mVesc->connectSerial(mVesc->defaultLeftMotorPort(), 115200);
         return;
     }
 
@@ -2254,7 +2259,8 @@ void MainWindow::updateControlValues()
 
     calculateDuty(leftDutyValue, rightDutyValue);
 
-    mVesc->commands()->setDutyCycle(leftDutyValue);
+    mVesc->commands()->setDutyCycle(leftDutyValue, mVesc->defaultLeftMotorPort);
+    mVesc->commands()->setDutyCycle(rightDutyValue, mVesc->defaultRightMotorPort);
 }
 
 void MainWindow::gamepadBtnPressed(bool value)
@@ -2276,6 +2282,13 @@ void MainWindow::gamepadBtnPressed(bool value)
     }
     if(mGamepad->buttonB()) {
         isReversed = !isReversed;
+    }
+}
+
+void MainWindow::vescHealthCheck()
+{
+    if(!mVesc->isPortConnected()) {
+        mVesc->connectSerial(mVesc->defaultLeftMotorPort, 115200);
     }
 }
 

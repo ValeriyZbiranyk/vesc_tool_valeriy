@@ -69,7 +69,7 @@ Packet::~Packet()
     delete[] mRxBuffer;
 }
 
-void Packet::sendPacket(const QByteArray &data)
+void Packet::sendPacket(const QByteArray &data, const QString &motorSerialPort)
 {
     if (data.size() == 0 || data.size() > (int)mMaxPacketLen) {
         return;
@@ -99,7 +99,7 @@ void Packet::sendPacket(const QByteArray &data)
     to_send.append((char)(crc & 0xFF));
     to_send.append((char)3);
 
-    emit dataToSend(to_send);
+    emit dataToSend(to_send, motorSerialPort);
 }
 
 void Packet::resetState()

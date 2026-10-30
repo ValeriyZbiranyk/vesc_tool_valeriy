@@ -275,7 +275,7 @@ void PageExperiments::timerSlot()
 
                 switch (mState) {
                 case EXPERIMENT_DUTY:
-                    mVesc->commands()->setDutyCycle(valueNow);
+                    mVesc->commands()->setDutyCycle(valueNow, mVesc->defaultLeftMotorPort);
                     break;
 
                 case EXPERIMENT_CURRENT:

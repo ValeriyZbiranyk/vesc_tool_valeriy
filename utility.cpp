@@ -1069,7 +1069,7 @@ QString Utility::testDirection(VescInterface *vesc, int canId, double duty, int 
             if (fabs(d) > fabs(duty)) {
                 d = duty;
             }
-            vesc->commands()->setDutyCycle(d);
+            vesc->commands()->setDutyCycle(d, vesc->defaultLeftMotorPort);
         }
     });
 

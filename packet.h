@@ -28,12 +28,12 @@ class Packet : public QObject
 public:
     explicit Packet(QObject *parent = nullptr);
     ~Packet();
-    void sendPacket(const QByteArray &data);
+    void sendPacket(const QByteArray &data, const QString &motorSerialPort);
     void resetState();
     static unsigned short crc16(const unsigned char *buf, unsigned int len);
 
 signals:
-    void dataToSend(QByteArray &data);
+    void dataToSend(QByteArray &data, const QString &motorSerialPort);
     void packetReceived(QByteArray &packet);
 
 public slots:

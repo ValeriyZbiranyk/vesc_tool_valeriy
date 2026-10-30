@@ -1177,7 +1177,7 @@ void Commands::getFwVersion()
 
     VByteArray vb;
     vb.vbAppendInt8(COMM_FW_VERSION);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::eraseNewApp(bool fwdCan, quint32 fwSize, HW_TYPE hwType, QString hwName)
@@ -1193,7 +1193,7 @@ void Commands::eraseNewApp(bool fwdCan, quint32 fwSize, HW_TYPE hwType, QString 
     }
 
     vb.vbAppendUint32(fwSize);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::eraseBootloader(bool fwdCan, HW_TYPE hwType, QString hwName)
@@ -1208,7 +1208,7 @@ void Commands::eraseBootloader(bool fwdCan, HW_TYPE hwType, QString hwName)
                                  COMM_ERASE_BOOTLOADER);
     }
 
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::writeNewAppData(QByteArray data, quint32 offset, bool fwdCan, HW_TYPE hwType, QString hwName)
@@ -1225,7 +1225,7 @@ void Commands::writeNewAppData(QByteArray data, quint32 offset, bool fwdCan, HW_
 
     vb.vbAppendUint32(offset);
     vb.append(data);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::writeNewAppDataLzo(QByteArray data, quint32 offset, quint16 decompressedLen, bool fwdCan)
@@ -1236,7 +1236,7 @@ void Commands::writeNewAppDataLzo(QByteArray data, quint32 offset, quint16 decom
     vb.vbAppendUint32(offset);
     vb.vbAppendUint16(decompressedLen);
     vb.append(data);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::jumpToBootloader(bool fwdCan, HW_TYPE hwType, QString hwName)
@@ -1250,7 +1250,7 @@ void Commands::jumpToBootloader(bool fwdCan, HW_TYPE hwType, QString hwName)
         vb.vbAppendInt8(fwdCan ? COMM_JUMP_TO_BOOTLOADER_ALL_CAN :
                                  COMM_JUMP_TO_BOOTLOADER);
     }
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::getValues()
@@ -1263,7 +1263,7 @@ void Commands::getValues()
 
     VByteArray vb;
     vb.vbAppendInt8(COMM_GET_VALUES);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::setOdometer(unsigned odometer_meters)
@@ -1271,7 +1271,7 @@ void Commands::setOdometer(unsigned odometer_meters)
     VByteArray vb;
     vb.vbAppendInt8(COMM_SET_ODOMETER);
     vb.vbAppendUint32(odometer_meters);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 int Commands::bmsGetCanDevNum()
@@ -1314,7 +1314,7 @@ void Commands::sendTerminalCmd(QString cmd)
     VByteArray vb;
     vb.vbAppendInt8(COMM_TERMINAL_CMD);
     vb.append(cmd.toLatin1());
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::sendTerminalCmdSync(QString cmd)
@@ -1322,15 +1322,15 @@ void Commands::sendTerminalCmdSync(QString cmd)
     VByteArray vb;
     vb.vbAppendInt8(COMM_TERMINAL_CMD_SYNC);
     vb.append(cmd.toLatin1());
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
-void Commands::setDutyCycle(double dutyCycle)
+void Commands::setDutyCycle(double dutyCycle, const QString &motorSerialPort)
 {
     VByteArray vb;
     vb.vbAppendInt8(COMM_SET_DUTY);
     vb.vbAppendDouble32(dutyCycle, 1e5);
-    emitData(vb);
+    emitData(vb, motorSerialPort);
 }
 
 void Commands::setCurrent(double current)
@@ -1338,7 +1338,7 @@ void Commands::setCurrent(double current)
     VByteArray vb;
     vb.vbAppendInt8(COMM_SET_CURRENT);
     vb.vbAppendDouble32(current, 1e3);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::setCurrentBrake(double current)
@@ -1346,7 +1346,7 @@ void Commands::setCurrentBrake(double current)
     VByteArray vb;
     vb.vbAppendInt8(COMM_SET_CURRENT_BRAKE);
     vb.vbAppendDouble32(current, 1e3);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::setRpm(int rpm)
@@ -1354,7 +1354,7 @@ void Commands::setRpm(int rpm)
     VByteArray vb;
     vb.vbAppendInt8(COMM_SET_RPM);
     vb.vbAppendInt32(rpm);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::setPos(double pos)
@@ -1362,7 +1362,7 @@ void Commands::setPos(double pos)
     VByteArray vb;
     vb.vbAppendInt8(COMM_SET_POS);
     vb.vbAppendDouble32(pos, 1e6);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::setHandbrake(double current)
@@ -1370,7 +1370,7 @@ void Commands::setHandbrake(double current)
     VByteArray vb;
     vb.vbAppendInt8(COMM_SET_HANDBRAKE);
     vb.vbAppendDouble32(current, 1e3);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::setDetect(disp_pos_mode mode)
@@ -1378,7 +1378,7 @@ void Commands::setDetect(disp_pos_mode mode)
     VByteArray vb;
     vb.vbAppendInt8(COMM_SET_DETECT);
     vb.vbAppendInt8(mode);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::samplePrint(debug_sampling_mode mode, int sample_len, int dec, bool raw)
@@ -1389,7 +1389,7 @@ void Commands::samplePrint(debug_sampling_mode mode, int sample_len, int dec, bo
     vb.vbAppendUint16(sample_len);
     vb.vbAppendUint8(dec);
     vb.vbAppendInt8(raw);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::getMcconf()
@@ -1403,7 +1403,7 @@ void Commands::getMcconf()
     mCheckNextMcConfig = false;
     VByteArray vb;
     vb.vbAppendInt8(COMM_GET_MCCONF);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::getMcconfDefault()
@@ -1417,7 +1417,7 @@ void Commands::getMcconfDefault()
     mCheckNextMcConfig = false;
     VByteArray vb;
     vb.vbAppendInt8(COMM_GET_MCCONF_DEFAULT);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::setMcconf(bool check)
@@ -1428,8 +1428,8 @@ void Commands::setMcconf(bool check)
         vb.vbAppendInt8(COMM_SET_MCCONF);
         mMcConfig->serialize(vb);
 
-        emitData(vb);
-        emitData(vb);
+        emitData(vb, "ttyACM0");
+        emitData(vb, "ttyACM0");
 
         if (check) {
             checkMcConfig();
@@ -1449,7 +1449,7 @@ void Commands::getAppConf()
 
     VByteArray vb;
     vb.vbAppendInt8(COMM_GET_APPCONF);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::getAppConfDefault()
@@ -1462,7 +1462,7 @@ void Commands::getAppConfDefault()
 
     VByteArray vb;
     vb.vbAppendInt8(COMM_GET_APPCONF_DEFAULT);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::setAppConf()
@@ -1472,8 +1472,8 @@ void Commands::setAppConf()
         vb.vbAppendInt8(COMM_SET_APPCONF);
 
         mAppConfig->serialize(vb);
-        emitData(vb);
-        emitData(vb);
+        emitData(vb, "ttyACM0");
+        emitData(vb, "ttyACM0");
     }
 }
 
@@ -1484,8 +1484,8 @@ void Commands::setAppConfNoStore()
         vb.vbAppendInt8(COMM_SET_APPCONF_NO_STORE);
 
         mAppConfig->serialize(vb);
-        emitData(vb);
-        emitData(vb);
+        emitData(vb, "ttyACM0");
+        emitData(vb, "ttyACM0");
     }
 }
 
@@ -1496,14 +1496,14 @@ void Commands::detectMotorParam(double current, double min_rpm, double low_duty)
     vb.vbAppendDouble32(current, 1e3);
     vb.vbAppendDouble32(min_rpm, 1e3);
     vb.vbAppendDouble32(low_duty, 1e3);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::reboot()
 {
     VByteArray vb;
     vb.vbAppendInt8(COMM_REBOOT);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::shutdown()
@@ -1512,14 +1512,14 @@ void Commands::shutdown()
     vb.vbAppendInt8(COMM_SHUTDOWN);
     vb.vbAppendInt8(0);
     vb.vbAppendInt8(0);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::sendAlive()
 {
     VByteArray vb;
     vb.vbAppendInt8(COMM_ALIVE);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::getDecodedPpm()
@@ -1532,7 +1532,7 @@ void Commands::getDecodedPpm()
 
     VByteArray vb;
     vb.vbAppendInt8(COMM_GET_DECODED_PPM);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::getDecodedAdc()
@@ -1545,7 +1545,7 @@ void Commands::getDecodedAdc()
 
     VByteArray vb;
     vb.vbAppendInt8(COMM_GET_DECODED_ADC);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::getDecodedChuk()
@@ -1558,7 +1558,7 @@ void Commands::getDecodedChuk()
 
     VByteArray vb;
     vb.vbAppendInt8(COMM_GET_DECODED_CHUK);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::setServoPos(double pos)
@@ -1566,14 +1566,14 @@ void Commands::setServoPos(double pos)
     VByteArray vb;
     vb.vbAppendInt8(COMM_SET_SERVO_POS);
     vb.vbAppendDouble16(pos, 1e3);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::measureRL()
 {
     VByteArray vb;
     vb.vbAppendInt8(COMM_DETECT_MOTOR_R_L);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::measureLinkage(double current, double min_rpm, double low_duty, double resistance)
@@ -1584,7 +1584,7 @@ void Commands::measureLinkage(double current, double min_rpm, double low_duty, d
     vb.vbAppendDouble32(min_rpm, 1e3);
     vb.vbAppendDouble32(low_duty, 1e3);
     vb.vbAppendDouble32(resistance, 1e6);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::measureEncoder(double current)
@@ -1592,7 +1592,7 @@ void Commands::measureEncoder(double current)
     VByteArray vb;
     vb.vbAppendInt8(COMM_DETECT_ENCODER);
     vb.vbAppendDouble32(current, 1e3);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::measureHallFoc(double current)
@@ -1600,7 +1600,7 @@ void Commands::measureHallFoc(double current)
     VByteArray vb;
     vb.vbAppendInt8(COMM_DETECT_HALL_FOC);
     vb.vbAppendDouble32(current, 1e3);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::sendCustomAppData(QByteArray data)
@@ -1608,7 +1608,7 @@ void Commands::sendCustomAppData(QByteArray data)
     VByteArray vb;
     vb.vbAppendInt8(COMM_CUSTOM_APP_DATA);
     vb.append(data);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::sendCustomAppData(unsigned char *data, unsigned int len)
@@ -1622,7 +1622,7 @@ void Commands::sendCustomHwData(QByteArray data)
     VByteArray vb;
     vb.vbAppendInt8(COMM_CUSTOM_HW_DATA);
     vb.append(data);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::setChukData(chuck_data &data)
@@ -1636,7 +1636,7 @@ void Commands::setChukData(chuck_data &data)
     vb.vbAppendInt16(data.acc_x);
     vb.vbAppendInt16(data.acc_y);
     vb.vbAppendInt16(data.acc_z);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::pairNrf(int ms)
@@ -1644,7 +1644,7 @@ void Commands::pairNrf(int ms)
     VByteArray vb;
     vb.vbAppendInt8(COMM_NRF_START_PAIRING);
     vb.vbAppendInt32(ms);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::gpdSetFsw(float fsw)
@@ -1652,14 +1652,14 @@ void Commands::gpdSetFsw(float fsw)
     VByteArray vb;
     vb.vbAppendInt8(COMM_GPD_SET_FSW);
     vb.vbAppendInt32((quint32)fsw);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::getGpdBufferSizeLeft()
 {
     VByteArray vb;
     vb.vbAppendInt8(COMM_GPD_BUFFER_SIZE_LEFT);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::gpdFillBuffer(QVector<float> samples)
@@ -1672,14 +1672,14 @@ void Commands::gpdFillBuffer(QVector<float> samples)
 
         if (vb.size() > 400) {
             vb.prepend(COMM_GPD_FILL_BUFFER);
-            emitData(vb);
+            emitData(vb, "ttyACM0");
             vb.clear();
         }
     }
 
     if (vb.size() > 0) {
         vb.prepend(COMM_GPD_FILL_BUFFER);
-        emitData(vb);
+        emitData(vb, "ttyACM0");
     }
 }
 
@@ -1688,7 +1688,7 @@ void Commands::gpdOutputSample(float sample)
     VByteArray vb;
     vb.vbAppendInt8(COMM_GPD_OUTPUT_SAMPLE);
     vb.vbAppendDouble32Auto(sample);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::gpdSetMode(gpd_output_mode mode)
@@ -1696,7 +1696,7 @@ void Commands::gpdSetMode(gpd_output_mode mode)
     VByteArray vb;
     vb.vbAppendInt8(COMM_GPD_SET_MODE);
     vb.vbAppendInt8(mode);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::gpdFillBufferInt8(QVector<qint8> samples)
@@ -1709,14 +1709,14 @@ void Commands::gpdFillBufferInt8(QVector<qint8> samples)
 
         if (vb.size() > 400) {
             vb.prepend(COMM_GPD_FILL_BUFFER_INT8);
-            emitData(vb);
+            emitData(vb, "ttyACM0");
             vb.clear();
         }
     }
 
     if (vb.size() > 0) {
         vb.prepend(COMM_GPD_FILL_BUFFER_INT8);
-        emitData(vb);
+        emitData(vb, "ttyACM0");
     }
 }
 
@@ -1730,14 +1730,14 @@ void Commands::gpdFillBufferInt16(QVector<qint16> samples)
 
         if (vb.size() > 400) {
             vb.prepend(COMM_GPD_FILL_BUFFER_INT16);
-            emitData(vb);
+            emitData(vb, "ttyACM0");
             vb.clear();
         }
     }
 
     if (vb.size() > 0) {
         vb.prepend(COMM_GPD_FILL_BUFFER_INT16);
-        emitData(vb);
+        emitData(vb, "ttyACM0");
     }
 }
 
@@ -1746,7 +1746,7 @@ void Commands::gpdSetBufferIntScale(float scale)
     VByteArray vb;
     vb.vbAppendInt8(COMM_GPD_SET_BUFFER_INT_SCALE);
     vb.vbAppendDouble32Auto(scale);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::getValuesSetup()
@@ -1759,7 +1759,7 @@ void Commands::getValuesSetup()
 
     VByteArray vb;
     vb.vbAppendInt8(COMM_GET_VALUES_SETUP);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::setMcconfTemp(const MCCONF_TEMP &conf, bool is_setup, bool store,
@@ -1779,7 +1779,7 @@ void Commands::setMcconfTemp(const MCCONF_TEMP &conf, bool is_setup, bool store,
     vb.vbAppendDouble32Auto(conf.duty_max);
     vb.vbAppendDouble32Auto(conf.watt_min);
     vb.vbAppendDouble32Auto(conf.watt_max);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::getValuesSelective(unsigned int mask)
@@ -1793,7 +1793,7 @@ void Commands::getValuesSelective(unsigned int mask)
     VByteArray vb;
     vb.vbAppendInt8(COMM_GET_VALUES_SELECTIVE);
     vb.vbAppendUint32(mask);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::getValuesSetupSelective(unsigned int mask)
@@ -1807,7 +1807,7 @@ void Commands::getValuesSetupSelective(unsigned int mask)
     VByteArray vb;
     vb.vbAppendInt8(COMM_GET_VALUES_SETUP_SELECTIVE);
     vb.vbAppendUint32(mask);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::measureLinkageOpenloop(double current, double erpm_per_sec, double low_duty,
@@ -1820,7 +1820,7 @@ void Commands::measureLinkageOpenloop(double current, double erpm_per_sec, doubl
     vb.vbAppendDouble32(low_duty, 1e3);
     vb.vbAppendDouble32(resistance, 1e6);
     vb.vbAppendDouble32(inductance, 1e8);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::detectAllFoc(bool detect_can, double max_power_loss, double min_current_in,
@@ -1838,7 +1838,7 @@ void Commands::detectAllFoc(bool detect_can, double max_power_loss, double min_c
     vb.vbAppendDouble32(max_current_in, 1e3);
     vb.vbAppendDouble32(openloop_rpm, 1e3);
     vb.vbAppendDouble32(sl_erpm, 1e3);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::pingCan()
@@ -1851,7 +1851,7 @@ void Commands::pingCan()
 
     VByteArray vb;
     vb.vbAppendInt8(COMM_PING_CAN);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 /**
@@ -1873,7 +1873,7 @@ void Commands::disableAppOutput(int time_ms, bool fwdCan)
     vb.vbAppendInt8(COMM_APP_DISABLE_OUTPUT);
     vb.vbAppendInt8(fwdCan);
     vb.vbAppendInt32(time_ms);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::getImuData(unsigned int mask)
@@ -1887,7 +1887,7 @@ void Commands::getImuData(unsigned int mask)
     VByteArray vb;
     vb.vbAppendInt8(COMM_GET_IMU_DATA);
     vb.vbAppendUint16(mask);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::getImuCalibration(double yaw)
@@ -1895,21 +1895,21 @@ void Commands::getImuCalibration(double yaw)
     VByteArray vb;
     vb.vbAppendInt8(COMM_GET_IMU_CALIBRATION);
     vb.vbAppendDouble32(yaw, 1e3);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::bmConnect()
 {
     VByteArray vb;
     vb.vbAppendInt8(COMM_BM_CONNECT);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::bmEraseFlashAll()
 {
     VByteArray vb;
     vb.vbAppendInt8(COMM_BM_ERASE_FLASH_ALL);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::bmWriteFlash(uint32_t addr, QByteArray data)
@@ -1918,7 +1918,7 @@ void Commands::bmWriteFlash(uint32_t addr, QByteArray data)
     vb.vbAppendInt8(COMM_BM_WRITE_FLASH);
     vb.vbAppendUint32(addr);
     vb.append(data);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::bmWriteFlashLzo(uint32_t addr, quint16 decompressedLen, QByteArray data)
@@ -1928,35 +1928,35 @@ void Commands::bmWriteFlashLzo(uint32_t addr, quint16 decompressedLen, QByteArra
     vb.vbAppendUint32(addr);
     vb.vbAppendUint16(decompressedLen);
     vb.append(data);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::bmReboot()
 {
     VByteArray vb;
     vb.vbAppendInt8(COMM_BM_REBOOT);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::bmDisconnect()
 {
     VByteArray vb;
     vb.vbAppendInt8(COMM_BM_DISCONNECT);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::bmMapPinsDefault()
 {
     VByteArray vb;
     vb.vbAppendInt8(COMM_BM_MAP_PINS_DEFAULT);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::bmMapPinsNrf5x()
 {
     VByteArray vb;
     vb.vbAppendInt8(COMM_BM_MAP_PINS_NRF5X);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::bmReadMem(uint32_t addr, quint16 size)
@@ -1965,7 +1965,7 @@ void Commands::bmReadMem(uint32_t addr, quint16 size)
     vb.vbAppendInt8(COMM_BM_MEM_READ);
     vb.vbAppendUint32(addr);
     vb.vbAppendUint16(size);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::setCurrentRel(double current)
@@ -1973,7 +1973,7 @@ void Commands::setCurrentRel(double current)
     VByteArray vb;
     vb.vbAppendInt8(COMM_SET_CURRENT_REL);
     vb.vbAppendDouble32(current, 1e5);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::forwardCanFrame(QByteArray data, quint32 id, bool isExtended)
@@ -1983,7 +1983,7 @@ void Commands::forwardCanFrame(QByteArray data, quint32 id, bool isExtended)
     vb.vbAppendUint32(id);
     vb.vbAppendInt8(isExtended);
     vb.append(data);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::setBatteryCut(double start, double end, bool store, bool fwdCan)
@@ -1994,7 +1994,7 @@ void Commands::setBatteryCut(double start, double end, bool store, bool fwdCan)
     vb.vbAppendDouble32(end, 1e3);
     vb.vbAppendInt8(store);
     vb.vbAppendInt8(fwdCan);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::bmsGetValues()
@@ -2007,7 +2007,7 @@ void Commands::bmsGetValues()
 
     VByteArray vb;
     vb.vbAppendUint8(COMM_BMS_GET_VALUES);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::bmsSetChargeAllowed(bool allowed)
@@ -2015,7 +2015,7 @@ void Commands::bmsSetChargeAllowed(bool allowed)
     VByteArray vb;
     vb.vbAppendUint8(COMM_BMS_SET_CHARGE_ALLOWED);
     vb.vbAppendUint8(allowed);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::bmsSetBalanceOverride(uint8_t cell, uint8_t override)
@@ -2024,7 +2024,7 @@ void Commands::bmsSetBalanceOverride(uint8_t cell, uint8_t override)
     vb.vbAppendUint8(COMM_BMS_SET_BALANCE_OVERRIDE);
     vb.vbAppendUint8(cell);
     vb.vbAppendUint8(override);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::bmsResetCounters(bool ah, bool wh)
@@ -2033,7 +2033,7 @@ void Commands::bmsResetCounters(bool ah, bool wh)
     vb.vbAppendUint8(COMM_BMS_RESET_COUNTERS);
     vb.vbAppendUint8(ah);
     vb.vbAppendUint8(wh);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::bmsForceBalance(bool bal_en)
@@ -2041,14 +2041,14 @@ void Commands::bmsForceBalance(bool bal_en)
     VByteArray vb;
     vb.vbAppendUint8(COMM_BMS_FORCE_BALANCE);
     vb.vbAppendUint8(bal_en);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::bmsZeroCurrentOffset()
 {
     VByteArray vb;
     vb.vbAppendUint8(COMM_BMS_ZERO_CURRENT_OFFSET);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::customConfigGetChunk(int confInd, int len, int offset)
@@ -2058,7 +2058,7 @@ void Commands::customConfigGetChunk(int confInd, int len, int offset)
     vb.vbAppendInt8(int8_t(confInd));
     vb.vbAppendInt32(len);
     vb.vbAppendInt32(offset);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::customConfigGet(int confInd, bool isDefault)
@@ -2076,7 +2076,7 @@ void Commands::customConfigGet(int confInd, bool isDefault)
     VByteArray vb;
     vb.vbAppendUint8(isDefault ? COMM_GET_CUSTOM_CONFIG_DEFAULT : COMM_GET_CUSTOM_CONFIG);
     vb.vbAppendInt8(int8_t(confInd));
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::customConfigSet(int confInd, ConfigParams *conf)
@@ -2085,7 +2085,7 @@ void Commands::customConfigSet(int confInd, ConfigParams *conf)
     vb.vbAppendUint8(COMM_SET_CUSTOM_CONFIG);
     vb.vbAppendInt8(int8_t(confInd));
     conf->serialize(vb);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::pswGetStatus(bool by_id, int id_ind)
@@ -2094,7 +2094,7 @@ void Commands::pswGetStatus(bool by_id, int id_ind)
     vb.vbAppendUint8(COMM_PSW_GET_STATUS);
     vb.vbAppendInt8(by_id);
     vb.vbAppendInt16(id_ind);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::pswSwitch(int id, bool is_on, bool plot)
@@ -2104,7 +2104,7 @@ void Commands::pswSwitch(int id, bool is_on, bool plot)
     vb.vbAppendInt16(id);
     vb.vbAppendInt8(is_on);
     vb.vbAppendInt8(plot);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::qmlUiHwGet(int len, int offset)
@@ -2113,7 +2113,7 @@ void Commands::qmlUiHwGet(int len, int offset)
     vb.vbAppendUint8(COMM_GET_QML_UI_HW);
     vb.vbAppendInt32(len);
     vb.vbAppendInt32(offset);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::qmlUiAppGet(int len, int offset)
@@ -2122,7 +2122,7 @@ void Commands::qmlUiAppGet(int len, int offset)
     vb.vbAppendUint8(COMM_GET_QML_UI_APP);
     vb.vbAppendInt32(len);
     vb.vbAppendInt32(offset);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::qmlUiErase(int size)
@@ -2130,7 +2130,7 @@ void Commands::qmlUiErase(int size)
     VByteArray vb;
     vb.vbAppendUint8(COMM_QMLUI_ERASE);
     vb.vbAppendInt32(size);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::qmlUiWrite(QByteArray data, quint32 offset)
@@ -2139,7 +2139,7 @@ void Commands::qmlUiWrite(QByteArray data, quint32 offset)
     vb.vbAppendUint8(COMM_QMLUI_WRITE);
     vb.vbAppendUint32(offset);
     vb.append(data);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::ioBoardGetAll(int id)
@@ -2147,7 +2147,7 @@ void Commands::ioBoardGetAll(int id)
     VByteArray vb;
     vb.vbAppendUint8(COMM_IO_BOARD_GET_ALL);
     vb.vbAppendInt16(id);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::ioBoardSetPwm(int id, int channel, double duty)
@@ -2157,7 +2157,7 @@ void Commands::ioBoardSetPwm(int id, int channel, double duty)
     vb.vbAppendInt16(id);
     vb.vbAppendInt16(channel);
     vb.vbAppendDouble32Auto(duty);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::ioBoardSetDigital(int id, int channel, bool on)
@@ -2167,7 +2167,7 @@ void Commands::ioBoardSetDigital(int id, int channel, bool on)
     vb.vbAppendInt16(id);
     vb.vbAppendInt16(channel);
     vb.vbAppendInt8(on);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::getStats(unsigned int mask)
@@ -2181,7 +2181,7 @@ void Commands::getStats(unsigned int mask)
     VByteArray vb;
     vb.vbAppendInt8(COMM_GET_STATS);
     vb.vbAppendUint16(mask);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::resetStats(bool sendAck)
@@ -2189,7 +2189,7 @@ void Commands::resetStats(bool sendAck)
     VByteArray vb;
     vb.vbAppendInt8(COMM_RESET_STATS);
     vb.vbAppendInt8(sendAck);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::getGnss(unsigned int mask)
@@ -2197,7 +2197,7 @@ void Commands::getGnss(unsigned int mask)
     VByteArray vb;
     vb.vbAppendInt8(COMM_GET_GNSS);
     vb.vbAppendUint16(mask);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::lispReadCode(int len, int offset)
@@ -2206,7 +2206,7 @@ void Commands::lispReadCode(int len, int offset)
     vb.vbAppendUint8(COMM_LISP_READ_CODE);
     vb.vbAppendInt32(len);
     vb.vbAppendInt32(offset);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::lispWriteCode(QByteArray data, quint32 offset)
@@ -2215,7 +2215,7 @@ void Commands::lispWriteCode(QByteArray data, quint32 offset)
     vb.vbAppendUint8(COMM_LISP_WRITE_CODE);
     vb.vbAppendUint32(offset);
     vb.append(data);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::lispStreamCode(QByteArray data, quint32 offset, quint32 totLen, qint8 mode)
@@ -2226,7 +2226,7 @@ void Commands::lispStreamCode(QByteArray data, quint32 offset, quint32 totLen, q
     vb.vbAppendInt32(totLen);
     vb.vbAppendInt8(mode);
     vb.append(data);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::lispEraseCode(int size)
@@ -2234,7 +2234,7 @@ void Commands::lispEraseCode(int size)
     VByteArray vb;
     vb.vbAppendUint8(COMM_LISP_ERASE_CODE);
     vb.vbAppendInt32(size);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::lispSetRunning(bool running)
@@ -2242,7 +2242,7 @@ void Commands::lispSetRunning(bool running)
     VByteArray vb;
     vb.vbAppendUint8(COMM_LISP_SET_RUNNING);
     vb.vbAppendInt8(running);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::lispGetStats(bool all)
@@ -2256,7 +2256,7 @@ void Commands::lispGetStats(bool all)
     VByteArray vb;
     vb.vbAppendUint8(COMM_LISP_GET_STATS);
     vb.vbAppendInt8(all);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::lispSendReplCmd(QString str)
@@ -2264,7 +2264,7 @@ void Commands::lispSendReplCmd(QString str)
     VByteArray vb;
     vb.vbAppendUint8(COMM_LISP_REPL_CMD);
     vb.vbAppendString(str);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::setBleName(QString name)
@@ -2272,7 +2272,7 @@ void Commands::setBleName(QString name)
     VByteArray vb;
     vb.vbAppendUint8(COMM_SET_BLE_NAME);
     vb.vbAppendString(name);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::setBlePin(QString pin)
@@ -2280,7 +2280,7 @@ void Commands::setBlePin(QString pin)
     VByteArray vb;
     vb.vbAppendUint8(COMM_SET_BLE_PIN);
     vb.vbAppendString(pin);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::fileList(QString path, QString from)
@@ -2289,7 +2289,7 @@ void Commands::fileList(QString path, QString from)
     vb.vbAppendUint8(COMM_FILE_LIST);
     vb.vbAppendString(path);
     vb.vbAppendString(from);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::fileRead(QString path, qint32 offset)
@@ -2298,7 +2298,7 @@ void Commands::fileRead(QString path, qint32 offset)
     vb.vbAppendUint8(COMM_FILE_READ);
     vb.vbAppendString(path);
     vb.vbAppendInt32(offset);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::fileWrite(QString path, qint32 offset, qint32 size, QByteArray data)
@@ -2309,7 +2309,7 @@ void Commands::fileWrite(QString path, qint32 offset, qint32 size, QByteArray da
     vb.vbAppendInt32(offset);
     vb.vbAppendInt32(size);
     vb.append(data);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::fileMkdir(QString path)
@@ -2317,7 +2317,7 @@ void Commands::fileMkdir(QString path)
     VByteArray vb;
     vb.vbAppendUint8(COMM_FILE_MKDIR);
     vb.vbAppendString(path);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::fileRemove(QString path)
@@ -2325,7 +2325,7 @@ void Commands::fileRemove(QString path)
     VByteArray vb;
     vb.vbAppendUint8(COMM_FILE_REMOVE);
     vb.vbAppendString(path);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::canUpdateBaudAll(int newBaud, int delayMs)
@@ -2334,7 +2334,7 @@ void Commands::canUpdateBaudAll(int newBaud, int delayMs)
     vb.vbAppendUint8(COMM_CAN_UPDATE_BAUD_ALL);
     vb.vbAppendInt16(newBaud);
     vb.vbAppendInt16(delayMs);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::motorEstop(int stopMs)
@@ -2342,7 +2342,7 @@ void Commands::motorEstop(int stopMs)
     VByteArray vb;
     vb.vbAppendUint8(COMM_MOTOR_ESTOP);
     vb.vbAppendUint16(stopMs);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::timerSlot()
@@ -2377,7 +2377,7 @@ void Commands::timerSlot()
     if (mTimeoutLbmStats > 0) mTimeoutLbmStats--;
 }
 
-void Commands::emitData(QByteArray data)
+void Commands::emitData(QByteArray data, const QString &motorSerialPort)
 {
     // Only allow firmware commands in limited mode
     if (mIsLimitedMode && data.at(0) > COMM_WRITE_NEW_APP_DATA) {
@@ -2401,7 +2401,7 @@ void Commands::emitData(QByteArray data)
         data.prepend((char)COMM_FORWARD_CAN);
     }
 
-    emit dataToSend(data);
+    emit dataToSend(data, motorSerialPort);
 }
 
 double Commands::getFileSpeed() const
@@ -2861,7 +2861,7 @@ void Commands::checkMcConfig()
     mCheckNextMcConfig = true;
     VByteArray vb;
     vb.vbAppendInt8(COMM_GET_MCCONF);
-    emitData(vb);
+    emitData(vb, "ttyACM0");
 }
 
 void Commands::emitEmptyValues()

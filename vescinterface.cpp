@@ -136,13 +136,17 @@ VescInterface::VescInterface(QObject *parent) : QObject(parent)
 
     // Serial
 #ifdef HAS_SERIALPORT
-    mSerialPort = new QSerialPort(this);
+    mSerialPortLeftMotor = new QSerialPort(this);
     mLastSerialPort = mSettings.value("serial_port", "").toString();
     mLastSerialBaud = mSettings.value("serial_baud", 115200).toInt();
 
-    connect(mSerialPort, SIGNAL(readyRead()),
+    connect(mSerialPortLeftMotor, SIGNAL(readyRead()),
             this, SLOT(serialDataAvailable()));
-    connect(mSerialPort, SIGNAL(error(QSerialPort::SerialPortError)),
+    connect(mSerialPortLeftMotor, SIGNAL(error(QSerialPort::SerialPortError)),
+            this, SLOT(serialPortError(QSerialPort::SerialPortError)));
+
+    mSerialPortRightMotor = new QSerialPort(this);
+    connect(mSerialPortLeftMotor, SIGNAL(error(QSerialPort::SerialPortError)),
             this, SLOT(serialPortError(QSerialPort::SerialPortError)));
 #endif
 
@@ -222,10 +226,10 @@ VescInterface::VescInterface(QObject *parent) : QObject(parent)
     mTcpServer = new TcpServerSimple(this);
     mTcpServer->setUsePacket(true);
     connect(mTcpServer->packet(), &Packet::packetReceived, [this](QByteArray &packet) {
-        mPacket->sendPacket(packet);
+        mPacket->sendPacket(packet, defaultLeftMotorPort);
     });
     connect(mPacket, &Packet::packetReceived, [this](QByteArray &packet) {
-        mTcpServer->packet()->sendPacket(packet);
+        mTcpServer->packet()->sendPacket(packet, defaultLeftMotorPort);
     });
 
     mTimerBroadcast = new QTimer(this);
@@ -258,10 +262,10 @@ VescInterface::VescInterface(QObject *parent) : QObject(parent)
     mUdpServer = new UdpServerSimple(this);
     mUdpServer->setUsePacket(true);
     connect(mUdpServer->packet(), &Packet::packetReceived, [this](QByteArray &packet) {
-        mPacket->sendPacket(packet);
+        mPacket->sendPacket(packet, defaultLeftMotorPort);
     });
     connect(mPacket, &Packet::packetReceived, [this](QByteArray &packet) {
-        mUdpServer->packet()->sendPacket(packet);
+        mUdpServer->packet()->sendPacket(packet, defaultLeftMotorPort);
     });
 
     {
@@ -354,12 +358,12 @@ VescInterface::VescInterface(QObject *parent) : QObject(parent)
 
     // Other signals/slots
     connect(mTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
-    connect(mPacket, SIGNAL(dataToSend(QByteArray&)),
-            this, SLOT(packetDataToSend(QByteArray&)));
+    connect(mPacket, SIGNAL(dataToSend(QByteArray&, QString)),
+            this, SLOT(packetDataToSend(QByteArray&, QString)));
     connect(mPacket, SIGNAL(packetReceived(QByteArray&)),
             this, SLOT(packetReceived(QByteArray&)));
-    connect(mCommands, SIGNAL(dataToSend(QByteArray&)),
-            this, SLOT(cmdDataToSend(QByteArray&)));
+    connect(mCommands, SIGNAL(dataToSend(QByteArray&, QString)),
+            this, SLOT(cmdDataToSend(QByteArray&, QString)));
     connect(mCommands, SIGNAL(fwVersionReceived(FW_RX_PARAMS)),
             this, SLOT(fwVersionReceived(FW_RX_PARAMS)));
     connect(mCommands, SIGNAL(ackReceived(QString)), this, SLOT(ackReceived(QString)));
@@ -592,13 +596,13 @@ VescInterface::VescInterface(QObject *parent) : QObject(parent)
 
 #if VT_IS_TEST_VERSION
     QTimer::singleShot(1000, [this]() {
-        if (!mIgnoreTestVersion) {
+        /*if (!mIgnoreTestVersion) {
             emitMessageDialog("VESC Tool Test Version",
                               "Warning: This is a test version of VESC Tool. The included firmwares are NOT compatible with "
                               "released firmwares and should only be used with this test version. When using a release version "
                               "of VESC Tool, the firmware must be upgraded even if the version number is the same.",
                               false);
-        }
+        }*/
     });
 #endif
 }
@@ -2215,7 +2219,7 @@ bool VescInterface::isPortConnected()
     bool res = false;
 
 #ifdef HAS_SERIALPORT
-    if (mSerialPort->isOpen()) {
+    if (mSerialPortLeftMotor->isOpen() && mSerialPortRightMotor->isOpen()) {
         res = true;
     }
 #endif
@@ -2250,9 +2254,14 @@ bool VescInterface::isPortConnected()
 void VescInterface::disconnectPort()
 {
 #ifdef HAS_SERIALPORT
-    if(mSerialPort->isOpen()) {
-        mSerialPort->flush();
-        mSerialPort->close();
+    if(mSerialPortLeftMotor->isOpen()) {
+        mSerialPortLeftMotor->flush();
+        mSerialPortLeftMotor->close();
+        updateFwRx(false);
+    }
+    if(mSerialPortRightMotor->isOpen()) {
+        mSerialPortRightMotor->flush();
+        mSerialPortRightMotor->close();
         updateFwRx(false);
     }
 #endif
@@ -2383,7 +2392,7 @@ bool VescInterface::autoconnect()
             continue;
         }
 
-        mSerialPort->flush();
+        mSerialPortLeftMotor->flush();
         Utility::sleepWithEventLoop(100);
         mPacket->resetState();
 
@@ -2422,8 +2431,8 @@ QString VescInterface::getConnectedPortName()
     bool connected = false;
 
 #ifdef HAS_SERIALPORT
-    if (mSerialPort->isOpen()) {
-        res = tr("Connected (serial) to %1").arg(mSerialPort->portName());
+    if (mSerialPortLeftMotor->isOpen()) {
+        res = tr("Connected (serial) to %1").arg(mSerialPortLeftMotor->portName());
         connected = true;
     }
 #endif
@@ -2490,7 +2499,7 @@ bool VescInterface::connectSerial(QString port, int baudrate)
         return false;
     }
 
-    if(!mSerialPort->isOpen()) {
+    if(!mSerialPortLeftMotor->isOpen()) {
         // TODO: Maybe this test works on other OSes as well
 #ifdef Q_OS_UNIX
         QFileInfo fi(port);
@@ -2503,18 +2512,46 @@ bool VescInterface::connectSerial(QString port, int baudrate)
         }
 #endif
 
-        mSerialPort->setPortName(port);
-        mSerialPort->open(QIODevice::ReadWrite);
+        mSerialPortLeftMotor->setPortName(port);
+        mSerialPortLeftMotor->open(QIODevice::ReadWrite);
 
-        if(!mSerialPort->isOpen()) {
+        if(!mSerialPortLeftMotor->isOpen()) {
             return false;
         }
 
-        mSerialPort->setBaudRate(baudrate);
-        mSerialPort->setDataBits(QSerialPort::Data8);
-        mSerialPort->setParity(QSerialPort::NoParity);
-        mSerialPort->setStopBits(QSerialPort::OneStop);
-        mSerialPort->setFlowControl(QSerialPort::NoFlowControl);
+        mSerialPortLeftMotor->setBaudRate(baudrate);
+        mSerialPortLeftMotor->setDataBits(QSerialPort::Data8);
+        mSerialPortLeftMotor->setParity(QSerialPort::NoParity);
+        mSerialPortLeftMotor->setStopBits(QSerialPort::OneStop);
+        mSerialPortLeftMotor->setFlowControl(QSerialPort::NoFlowControl);
+    }
+
+    if(!mSerialPortRightMotor->isOpen()) {
+        // TODO: Maybe this test works on other OSes as well
+#ifdef Q_OS_UNIX
+        QFileInfo fi(defaultRightMotorPort);
+        if (fi.exists()) {
+            if (!fi.isWritable()) {
+                emit statusMessage(tr("Serial port is not writable"), false);
+                emit serialPortNotWritable(defaultRightMotorPort);
+                return false;
+            }
+        }
+#endif
+
+        mSerialPortRightMotor->setPortName(defaultRightMotorPort);
+        mSerialPortRightMotor->open(QIODevice::ReadWrite);
+
+        if(!mSerialPortRightMotor->isOpen()) {
+            qDebug() << __LINE__;
+            return false;
+        }
+
+        mSerialPortRightMotor->setBaudRate(baudrate);
+        mSerialPortRightMotor->setDataBits(QSerialPort::Data8);
+        mSerialPortRightMotor->setParity(QSerialPort::NoParity);
+        mSerialPortRightMotor->setStopBits(QSerialPort::OneStop);
+        mSerialPortRightMotor->setFlowControl(QSerialPort::NoFlowControl);
     }
 
     mLastSerialPort = port;
@@ -3010,8 +3047,8 @@ void VescInterface::emitConfigurationChanged()
 #ifdef HAS_SERIALPORT
 void VescInterface::serialDataAvailable()
 {
-    while (mSerialPort->bytesAvailable() > 0) {
-        mPacket->processData(mSerialPort->readAll());
+    while (mSerialPortLeftMotor->bytesAvailable() > 0) {
+        mPacket->processData(mSerialPortLeftMotor->readAll());
     }
 }
 
@@ -3023,15 +3060,19 @@ void VescInterface::serialPortError(QSerialPort::SerialPortError error)
         break;
 
     default:
-        message = "Serial port error: " + mSerialPort->errorString();
+        message = "Serial port error: " + mSerialPortLeftMotor->errorString();
         break;
     }
 
     if(!message.isEmpty()) {
         emit statusMessage(message, false);
 
-        if (mSerialPort->isOpen()) {
-            mSerialPort->close();
+        if (mSerialPortLeftMotor->isOpen()) {
+            mSerialPortLeftMotor->close();
+        }
+
+        if (mSerialPortRightMotor->isOpen()) {
+            mSerialPortRightMotor->close();
         }
 
        updateFwRx(false);
@@ -3356,11 +3397,16 @@ void VescInterface::timerSlot()
     }
 }
 
-void VescInterface::packetDataToSend(QByteArray &data)
-{
+void VescInterface::packetDataToSend(QByteArray &data, const QString &motorSerialPort) {
 #ifdef HAS_SERIALPORT
-    if (mSerialPort->isOpen()) {
-        mSerialPort->write(data);
+    if(motorSerialPort == defaultLeftMotorPort) {
+        if (mSerialPortLeftMotor->isOpen()) {
+            mSerialPortLeftMotor->write(data);
+        }
+    } else if(motorSerialPort == defaultRightMotorPort) {
+        if (mSerialPortRightMotor->isOpen()) {
+            mSerialPortRightMotor->write(data);
+        }
     }
 #endif
 
@@ -3494,9 +3540,9 @@ void VescInterface::packetReceived(QByteArray &data)
     mCommands->processPacket(data);
 }
 
-void VescInterface::cmdDataToSend(QByteArray &data)
+void VescInterface::cmdDataToSend(QByteArray &data, const QString &motorSerialPort)
 {
-    mPacket->sendPacket(data);
+    mPacket->sendPacket(data, motorSerialPort);
 }
 
 void VescInterface::fwVersionReceived(FW_RX_PARAMS params)
