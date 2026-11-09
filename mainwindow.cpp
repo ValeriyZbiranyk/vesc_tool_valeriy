@@ -585,6 +585,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     mAutoconnectTimer = new QTimer(this);
     mAutoconnectTimer->singleShot(2000, this, &MainWindow::vescHealthCheck);
+
+    mUdpSocketManager = new UdpSocketManager(this);
 }
 
 MainWindow::~MainWindow()

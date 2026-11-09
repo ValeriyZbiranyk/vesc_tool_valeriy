@@ -232,6 +232,7 @@ SOURCES += main.cpp\
     preferences.cpp \
     tcphub.cpp \
     udpserversimple.cpp \
+    udpsocketmanager.cpp \
     vbytearray.cpp \
     commands.cpp \
     configparams.cpp \
@@ -256,6 +257,7 @@ HEADERS  += mainwindow.h \
     preferences.h \
     tcphub.h \
     udpserversimple.h \
+    udpsocketmanager.h \
     vbytearray.h \
     commands.h \
     datatypes.h \

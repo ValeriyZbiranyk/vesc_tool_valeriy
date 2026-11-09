@@ -33,6 +33,7 @@
 #include "widgets/canlistitem.h"
 #include "mobile/qmlui.h"
 #include "preferences.h"
+#include "udpsocketmanager.h"
 
 #include "pages/pagewelcome.h"
 #include "pages/pageconnection.h"
@@ -186,6 +187,7 @@ private:
     bool isReversed = false;
     QTimer* mUpdateControlValuesTimer;
     QTimer* mAutoconnectTimer;
+    UdpSocketManager* mUdpSocketManager;
 
     QSettings mSettings;
     QString mVersion;
