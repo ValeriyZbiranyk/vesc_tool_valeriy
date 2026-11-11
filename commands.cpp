@@ -533,6 +533,7 @@ void Commands::processPacket(QByteArray data)
         }
 
         emit valuesSetupReceived(values, mask);
+
     } break;
 
     case COMM_SET_MCCONF_TEMP:

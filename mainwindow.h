@@ -93,6 +93,7 @@ protected:
     void dropEvent(QDropEvent* event);
 
 private slots:
+
     void timerSlotDebugMsg();
     void timerSlot();
     void showStatusInfo(QString info, bool isGood);
@@ -103,6 +104,7 @@ private slots:
     void mcConfigCheckResult(QStringList paramsNotSet);
     void pingCanRx(QVector<int> devs, bool isTimeout);
     void updateControlValues();
+    void updateRemoteControlValues(const double &leftMotorDuty, const double &rightMotorDuty);
     void gamepadBtnPressed(bool value);
     void vescHealthCheck();
 
@@ -187,6 +189,8 @@ private:
     bool isReversed = false;
     QTimer* mUpdateControlValuesTimer;
     QTimer* mAutoconnectTimer;
+
+    QTimer* telemetryTimer;
     UdpSocketManager* mUdpSocketManager;
 
     QSettings mSettings;
@@ -271,6 +275,9 @@ private:
     bool waitProcess(QProcess &process, bool block = true, int timeoutMs = 300000);
     QString runCmd(QString cmd, QStringList args);
 #endif
+
+signals:
+    void setTelemetry(const int &_batteryValue, const bool &_driversState, const QString &_mgrsCoordinates);
 };
 
 #endif // MAINWINDOW_H

@@ -587,6 +587,17 @@ MainWindow::MainWindow(QWidget *parent) :
     mAutoconnectTimer->singleShot(2000, this, &MainWindow::vescHealthCheck);
 
     mUdpSocketManager = new UdpSocketManager(this);
+    connect(this, &MainWindow::setTelemetry, mUdpSocketManager, &UdpSocketManager::receiveTelemetry);
+
+    telemetryTimer = new QTimer(this);
+    telemetryTimer->setInterval(1000);
+    connect(telemetryTimer, &QTimer::timeout, [this]() {
+        if(mVesc) {
+            if(mVesc->isPortConnected()) {
+                mVesc->commands()->getValues();
+            }
+        }
+    });
 }
 
 MainWindow::~MainWindow()
@@ -1095,6 +1106,10 @@ void MainWindow::valuesReceived(MC_VALUES values, unsigned int mask)
     (void)mask;
     ui->dispCurrent->setVal(values.current_motor);
     ui->dispDuty->setVal(values.duty_now * 100.0);
+
+    emit setTelemetry(qRound(values.v_in),
+                      mVesc->isPortConnected(),
+                      QString("36TXT6094893626"));
 }
 
 void MainWindow::paramChangedDouble(QObject *src, QString name, double newParam)
@@ -2248,6 +2263,10 @@ void MainWindow::pingCanRx(QVector<int> devs, bool isTimeout)
 
 void MainWindow::updateControlValues()
 {
+    if(mUdpSocketManager->isClientOnline() && !mGamepad->isConnected()) {
+        return;
+    }
+
     if(!mVesc) {
         return;
     }
@@ -2263,6 +2282,24 @@ void MainWindow::updateControlValues()
 
     mVesc->commands()->setDutyCycle(leftDutyValue, mVesc->defaultLeftMotorPort);
     mVesc->commands()->setDutyCycle(rightDutyValue, mVesc->defaultRightMotorPort);
+}
+
+void MainWindow::updateRemoteControlValues(const double &leftMotorDuty, const double &rightMotorDuty)
+{
+    if(mGamepad->isConnected()) {
+        return;
+    }
+
+    if(!mVesc) {
+        return;
+    }
+
+    if(!mVesc->isPortConnected()) {
+        return;
+    }
+
+    mVesc->commands()->setDutyCycle(leftMotorDuty, mVesc->defaultLeftMotorPort);
+    mVesc->commands()->setDutyCycle(rightMotorDuty, mVesc->defaultRightMotorPort);
 }
 
 void MainWindow::gamepadBtnPressed(bool value)
